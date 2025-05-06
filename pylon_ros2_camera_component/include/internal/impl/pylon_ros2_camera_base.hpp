@@ -180,6 +180,8 @@ size_t PylonROS2CameraImpl<CameraTraitT>::currentBinningY()
 template <typename CameraTraitT>
 std::string PylonROS2CameraImpl<CameraTraitT>::currentROSEncoding() const
 {
+    RCLCPP_INFO_STREAM_ONCE(LOGGER_BASE, "Camera's currently set pixel format is " << this->currentBaslerEncoding());
+
     std::string gen_api_encoding(cam_->PixelFormat.ToString().c_str());
     std::string ros_encoding("");
 
@@ -202,7 +204,6 @@ std::string PylonROS2CameraImpl<CameraTraitT>::currentROSEncoding() const
 template <typename CameraTraitT>
 std::string PylonROS2CameraImpl<CameraTraitT>::currentBaslerEncoding() const
 {
-
     return (cam_->PixelFormat.ToString().c_str());
 }
 
@@ -727,27 +728,27 @@ std::string PylonROS2CameraImpl<CameraTraitT>::setImageEncoding(const std::strin
     bool is_16bits_available = false;
     bool is_encoding_available = false;
     std::string gen_api_encoding;
+    
     // An additional check to select the correct basler encoding, as ROS 16-bits encoding will cover both Basler 12-bits and 16-bits encoding
     if (ros_encoding == sensor_msgs::image_encodings::BAYER_RGGB16
         || ros_encoding == sensor_msgs::image_encodings::BAYER_BGGR16
         || ros_encoding == sensor_msgs::image_encodings::BAYER_GBRG16
         || ros_encoding == sensor_msgs::image_encodings::BAYER_GRBG16)
     {
-        for ( const std::string& enc : available_image_encodings_ )
+        for (const std::string& enc : available_image_encodings_)
+        {
+            if (enc == "BayerRG16" || enc == "BayerBG16" || enc == "BayerGB16" || enc == "BayerGR16" || enc == "Mono16")
             {
-                if ( enc == "BayerRG16" || enc == "BayerBG16" || enc == "BayerGB16" || enc == "BayerGR16" || enc == "Mono16")
-                {
-                    is_16bits_available = true;
-                    break;
-                }
-
+                is_16bits_available = true;
+                break;
             }
+        }
     }
 
     bool conversion_found = encodingconversions::ros2GenAPI(ros_encoding, gen_api_encoding, is_16bits_available);
     if (ros_encoding != "")
     {
-        for ( const std::string& enc : available_image_encodings_ )
+        for (const std::string& enc : available_image_encodings_)
         {
             if ((gen_api_encoding == enc) && conversion_found)
             {
@@ -755,32 +756,36 @@ std::string PylonROS2CameraImpl<CameraTraitT>::setImageEncoding(const std::strin
                 break;
             }
         }
+
         if (! is_encoding_available)
             return "Error: unsupported/unknown image format";
     }
-    if ( !conversion_found )
+
+    if (!conversion_found)
     {
-        if ( ros_encoding.empty() )
+        if (ros_encoding.empty())
         {
             RCLCPP_WARN_STREAM(LOGGER_BASE, "No image encoding provided -> Will use 'mono8' or 'rgb8' as fallback");
         }
         else
         {
             RCLCPP_ERROR_STREAM(LOGGER_BASE, "Can't convert ROS encoding '" << ros_encoding
-                << "' to a corresponding GenAPI encoding! Will use 'mono8' or "
-                << "'rgb8' as fallback!");
+                << "' to a corresponding GenAPI encoding! Will use 'mono8' or 'rgb8' as fallback!");
         }
+
         bool fallback_found = false;
-        for ( const std::string& enc : available_image_encodings_ )
+        for (const std::string& enc : available_image_encodings_)
         {
             if ( enc == "Mono8" || enc == "RGB8" )
             {
                 fallback_found = true;
                 gen_api_encoding = enc;
+                RCLCPP_WARN_STREAM(LOGGER_BASE, "Encoding fallback found -> Will use '" << enc << "'");
                 break;
             }
         }
-        if ( !fallback_found )
+
+        if (!fallback_found)
         {
             RCLCPP_ERROR_STREAM(LOGGER_BASE, "Couldn't find a fallback solution!");
             return "Error: Couldn't find a fallback solution!";
@@ -788,23 +793,25 @@ std::string PylonROS2CameraImpl<CameraTraitT>::setImageEncoding(const std::strin
     }
 
     bool supports_desired_encoding = false;
-    for ( const std::string& enc : available_image_encodings_ )
+    for (const std::string& enc : available_image_encodings_)
     {
         supports_desired_encoding = (gen_api_encoding == enc);
-        if ( supports_desired_encoding )
+        if (supports_desired_encoding)
         {
             break;
         }
     }
-    if ( !supports_desired_encoding )
+
+    if (!supports_desired_encoding)
     {
         RCLCPP_WARN_STREAM(LOGGER_BASE, "Camera does not support the desired image pixel "
             << "encoding '" << ros_encoding << "'!");
         return "Error : Camera does not support the desired image pixel";
     }
+
     try
     {
-        if ( GenApi::IsAvailable(cam_->PixelFormat) )
+        if (GenApi::IsAvailable(cam_->PixelFormat))
         {
             GenApi::INodeMap& node_map = cam_->GetNodeMap();
             //cam_->StartGrabbing();
@@ -820,10 +827,11 @@ std::string PylonROS2CameraImpl<CameraTraitT>::setImageEncoding(const std::strin
             return "Error : Camera does not support variable image pixel";
         }
     }
-    catch ( const GenICam::GenericException &e )
+    catch (const GenICam::GenericException &e)
     {
         RCLCPP_ERROR_STREAM(LOGGER_BASE, "An exception while setting target image encoding to '"
             << ros_encoding << "' occurred: " << e.GetDescription());
+
         return e.GetDescription();
     }
 }
@@ -1017,7 +1025,7 @@ bool PylonROS2CameraImpl<CameraTraitT>::setBinningX(const size_t& target_binning
         }
         else
         {
-            RCLCPP_WARN_STREAM(LOGGER_BASE, "Camera does not support binning (X). Will keep the current settings.");
+            RCLCPP_WARN_STREAM_ONCE(LOGGER_BASE, "Camera does not support binning (X). Will keep the current settings.");
             reached_binning_x = currentBinningX();
         }
     }
@@ -1064,7 +1072,7 @@ bool PylonROS2CameraImpl<CameraTraitT>::setBinningY(const size_t& target_binning
         }
         else
         {
-            RCLCPP_WARN_STREAM(LOGGER_BASE, "Camera does not support binning (Y). Will keep the current settings.");
+            RCLCPP_WARN_STREAM_ONCE(LOGGER_BASE, "Camera does not support binning (Y). Will keep the current settings.");
             reached_binning_y = currentBinningY();
         }
     }
@@ -1324,6 +1332,7 @@ bool PylonROS2CameraImpl<CameraTraitT>::setExtendedBrightness(const int& target_
 {
     float autoTargetBrightnessMin = 0.0;
     float autoTargetBrightnessMax = 0.0;
+    
     if (GenApi::IsAvailable(cam_->AutoTargetValue))
     {
         autoTargetBrightnessMin = cam_->AutoTargetValue.GetMin();
@@ -1334,9 +1343,10 @@ bool PylonROS2CameraImpl<CameraTraitT>::setExtendedBrightness(const int& target_
         autoTargetBrightnessMin = cam_->AutoTargetBrightness.GetMin();
         autoTargetBrightnessMax = cam_->AutoTargetBrightness.GetMax();
     }
-    if (target_brightness > 0 && target_brightness <= 255)
+        
+    if (target_brightness <= autoTargetBrightnessMin || target_brightness > autoTargetBrightnessMax)
     {
-        RCLCPP_ERROR_STREAM(LOGGER_BASE, "Error: Brightness value should be greater than 0 and equal to or smaller than 255");
+        RCLCPP_ERROR_STREAM(LOGGER_BASE, "Error: Brightness value should be greater than " << autoTargetBrightnessMin << " and equal to or smaller than " << autoTargetBrightnessMax);
         return false;
     }
 
@@ -1482,7 +1492,7 @@ bool PylonROS2CameraImpl<CameraTraitT>::setUserOutput(const int& output_id,
                 << ex.what());
         return false;
     }
-    catch (const GenICam_3_1_Basler_pylon::InvalidArgumentException& ex)
+    catch (const GenICam::InvalidArgumentException& ex)
     {
         RCLCPP_ERROR_STREAM(LOGGER_BASE, "Could not set user output "  << output_id << ": "
                 << ex.what());

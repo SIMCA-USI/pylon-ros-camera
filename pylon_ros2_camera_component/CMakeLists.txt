@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.27)
 
 project(pylon_ros2_camera_component)
 
@@ -56,6 +56,14 @@ find_package(camera_info_manager REQUIRED)
 find_package(image_geometry REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(diagnostic_updater REQUIRED)
+
+if(cv_bridge_VERSION VERSION_GREATER_EQUAL 3.3.0)
+    add_compile_definitions(cv_bridge_HPP)
+endif()
+
+if(image_geometry_VERSION VERSION_GREATER_EQUAL 3.3.0)
+    add_compile_definitions(image_geometry_HPP)
+endif()
 
 set(PYLON_ROS2_CAMERA_DEPENDENCIES
 	pylon_ros2_camera_interfaces

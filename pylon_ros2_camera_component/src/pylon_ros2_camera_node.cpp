@@ -704,10 +704,12 @@ bool PylonROS2CameraNode::startGrabbing()
   }
 
   this->img_raw_msg_.header.frame_id = this->pylon_camera_parameter_set_.cameraFrame();
+  
   // Encoding of pixels -- channel meaning, ordering, size
   // taken from the list of strings in include/sensor_msgs/image_encodings.h
   this->img_raw_msg_.encoding = this->pylon_camera_->currentROSEncoding();
   this->img_raw_msg_.height = this->pylon_camera_->imageRows();
+  
   this->img_raw_msg_.width = this->pylon_camera_->imageCols();
   // step = full row length in bytes, img_size = (step * rows), imagePixelDepth
   // already contains the number of channels
@@ -734,13 +736,13 @@ bool PylonROS2CameraNode::startGrabbing()
     if (this->pylon_camera_parameter_set_.cameraInfoURL().empty() || 
         !this->camera_info_manager_->validateURL(this->pylon_camera_parameter_set_.cameraInfoURL()))
     { 
-      RCLCPP_INFO_STREAM(LOGGER, "CameraInfoURL needed for rectification! ROS2-Param: "
+      RCLCPP_INFO_STREAM_ONCE(LOGGER, "CameraInfoURL needed for rectification! ROS2-Param: "
           << "'" << this->get_namespace() << "/camera_info_url' = '"
           << this->pylon_camera_parameter_set_.cameraInfoURL() << "' is invalid!");
-      RCLCPP_DEBUG_STREAM(LOGGER, "CameraInfoURL should have following style: "
+      RCLCPP_DEBUG_STREAM_ONCE(LOGGER, "CameraInfoURL should have following style: "
           << "'file:///full/path/to/local/file.yaml' or "
           << "'package://<package_name>/relative/path/to/file.yaml'");
-      RCLCPP_WARN(LOGGER, "Will only provide distorted /image_raw images!");
+      RCLCPP_WARN_ONCE(LOGGER, "Will only provide distorted /image_raw images!");
     }
     else
     { 
@@ -755,8 +757,17 @@ bool PylonROS2CameraNode::startGrabbing()
       }
       else
       { 
-        RCLCPP_WARN(LOGGER, "Will only provide distorted /image_raw images!");
+        RCLCPP_WARN_ONCE(LOGGER, "Will only provide distorted /image_raw images!");
       }
+    }
+
+    if (this->camera_info_manager_->isCalibrated())
+    {
+      RCLCPP_INFO_ONCE(LOGGER, "Camera is calibrated (at startup)");
+    }
+    else
+    {
+      RCLCPP_INFO_ONCE(LOGGER, "Camera is not calibrated (at startup)");
     }
   }
   else
@@ -775,7 +786,7 @@ bool PylonROS2CameraNode::startGrabbing()
   {   
     std::size_t reached_binning_x;
     this->setBinningX(this->pylon_camera_parameter_set_.binning_x_, reached_binning_x);
-    RCLCPP_INFO_STREAM(LOGGER, "Setting horizontal binning_x to "
+    RCLCPP_INFO_STREAM_ONCE(LOGGER, "Setting horizontal binning_x to "
             << this->pylon_camera_parameter_set_.binning_x_);
     if (reached_binning_x > 1)
     {
@@ -788,7 +799,7 @@ bool PylonROS2CameraNode::startGrabbing()
   {   
     std::size_t reached_binning_y;
     this->setBinningY(this->pylon_camera_parameter_set_.binning_y_, reached_binning_y);
-    RCLCPP_INFO_STREAM(LOGGER, "Setting vertical binning_y to "
+    RCLCPP_INFO_STREAM_ONCE(LOGGER, "Setting vertical binning_y to "
             << pylon_camera_parameter_set_.binning_y_);
     if (reached_binning_y > 1)
     {
@@ -854,7 +865,7 @@ bool PylonROS2CameraNode::startGrabbing()
 
   if (!this->pylon_camera_->isBlaze())
   {
-    RCLCPP_INFO_STREAM(LOGGER, "Startup settings: "
+    RCLCPP_INFO_STREAM_ONCE(LOGGER, "Startup settings: "
       << "encoding = '" << this->pylon_camera_->currentROSEncoding() << "', "
       << "binning = [" << this->pylon_camera_->currentBinningX() << ", "
                        << this->pylon_camera_->currentBinningY() << "], "
@@ -865,11 +876,12 @@ bool PylonROS2CameraNode::startGrabbing()
   }
   else
   {
-    RCLCPP_INFO_STREAM(LOGGER, "Startup settings: "
+    RCLCPP_INFO_STREAM_ONCE(LOGGER, "Startup settings: "
       << "exposure = " << this->pylon_camera_->currentExposure());
   }
 
   // Framerate Settings
+  RCLCPP_DEBUG_ONCE(LOGGER, "Maximum possible framerate is %.2f Hz", this->pylon_camera_->maxPossibleFramerate());
   if (this->pylon_camera_->maxPossibleFramerate() < this->pylon_camera_parameter_set_.frameRate())
   {
     RCLCPP_INFO(LOGGER, "Desired framerate %.2f is higher than max possible. Will limit framerate to: %.2f Hz",
@@ -880,7 +892,7 @@ bool PylonROS2CameraNode::startGrabbing()
   else if (this->pylon_camera_parameter_set_.frameRate() == -1)
   {
     this->pylon_camera_parameter_set_.setFrameRate(*this, this->pylon_camera_->maxPossibleFramerate());
-    RCLCPP_INFO(LOGGER, "Max possible framerate is %.2f Hz", this->pylon_camera_->maxPossibleFramerate());
+    RCLCPP_INFO(LOGGER, "Max possible framerate with the current camera calibration is %.2f Hz", this->pylon_camera_->maxPossibleFramerate());
   }
   
   return true;
@@ -888,32 +900,23 @@ bool PylonROS2CameraNode::startGrabbing()
 
 void PylonROS2CameraNode::spin()
 {
-  if (this->camera_info_manager_->isCalibrated())
-  {
-    RCLCPP_INFO_ONCE(LOGGER, "Camera is calibrated");
-  }
-  else
-  {
-    RCLCPP_INFO_ONCE(LOGGER, "Camera not calibrated");
-  }
-
   if (this->pylon_camera_->isCamRemoved())
   {
-    RCLCPP_ERROR(LOGGER, "Pylon camera has been removed, trying to reset");
-    
+    RCLCPP_ERROR(LOGGER, "Camera is disconnected, trying now to reconnect");
+
     this->cm_status_.status_id = pylon_ros2_camera_interfaces::msg::ComponentStatus::ERROR;
-    this->cm_status_.status_msg = "Pylon camera has been removed, trying to reset";
-      
+    this->cm_status_.status_msg = "Camera is disconnected, trying now to reconnect";
+
     if (this->pylon_camera_parameter_set_.enable_status_publisher_)
     {
       this->component_status_pub_->publish(this->cm_status_);
     }
-      
+
     if (this->pylon_camera_ != nullptr)
     {
       this->pylon_camera_.reset();
     }
-      
+
     // Possible issue here: ROS2 does not allow to shutdown services
     // Services are shutdown in the ROS 1 pylon version at this level
     this->set_user_output_srvs_.clear();
@@ -922,7 +925,7 @@ void PylonROS2CameraNode::spin()
     r.sleep();
 
     this->init();
-    
+
     return;
   }
 
@@ -1115,7 +1118,7 @@ bool PylonROS2CameraNode::setExposure(const float& target_exposure, float& reach
   }
 }
 
-bool PylonROS2CameraNode::setBrightness(const int& target_brightness,
+bool PylonROS2CameraNode::setBrightness(const int& target_brightness, //MODIFICADO (int x float)
                                         int& reached_brightness,
                                         const bool& exposure_auto,
                                         const bool& gain_auto)
@@ -1140,7 +1143,7 @@ bool PylonROS2CameraNode::setBrightness(const int& target_brightness,
     return false;
   }
 
-  const int target_brightness_co = std::min(255, target_brightness);
+  const int target_brightness_co = std::min(255, (int)target_brightness); //MODIFICADO ((int))
   // smart brightness search initially sets the last rememberd exposure time
   if (this->brightness_exp_lut_.at(target_brightness_co) != 0.0)
   {
@@ -5112,7 +5115,7 @@ void PylonROS2CameraNode::publishCurrentParams()
     }
     catch (const GenICam::GenericException &e)
     {
-      RCLCPP_ERROR_STREAM(LOGGER, "An exception while getting the camera current params occurred:" << e.GetDescription());
+      RCLCPP_ERROR_STREAM(LOGGER, "An exception while getting the camera current params occurred: " << e.GetDescription());
       this->current_params_.success = false;
       this->current_params_.message = "An exception while getting the camera current parameters occurred";
     }

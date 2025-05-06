@@ -2,6 +2,10 @@
 Changelog for package pylon_ros2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.3 (2025-04-23)
+-------------------
+* Use generic "GenICam" alias globally
+
 3.0.2 (2024-12-12)
 -------------------
 * Fixing bug related to ExposureTime/ExposureTimeAbs variable ID problem
@@ -9,14 +13,21 @@ Changelog for package pylon_ros2_camera
 
 3.0.1 (2024-11-27)
 -------------------
-* Removing image_common as a submodule.
 * Fixing bug related to ExposureTime variable name for USB/Dart camera
 
-2.2.0 (2024-10-25)
+3.0.0 (2024-10-25)
+-------------------
+* Removing image_common as a submodule.
+
+2.3.0 (2024-10-25)
 -------------------
 * Taking into account auto exposure upper limit when user set is set to current setting.
 * Adding service to get ptp status.
 * Changing cmake minimum version.
+
+2.2.0 (2024-10-01)
+-------------------
+* The pylon driver is now compatible with ROS2 Jazzy Jalisco. Dedicated branch has been created.
 
 2.1.0 (2024-09-19)
 -------------------

@@ -1,6 +1,6 @@
 # ROS2-Driver for Basler Cameras
 
-The official pylon ROS2 driver for [Basler](http://www.baslerweb.com/) GigE Vision, Basler USB3 Vision and Basler blaze 3D cameras (Humble Hawksbill)
+The official pylon ROS2 driver for [Basler](http://www.baslerweb.com/) GigE Vision, Basler USB3 Vision and Basler blaze 3D cameras (Jazzy Jalisco)
 
 This driver provides many functionalities available through the Basler [pylon Camera Software Suite](https://www.baslerweb.com/en/products/software/basler-pylon-camera-software-suite/) C++ API.
 
@@ -13,11 +13,11 @@ You are welcome to post any questions or issues on [GitHub](https://github.com/b
 
 ### Prerequisites
 
-- From [Ubuntu 22.04 Jammy Jellyfish](https://releases.ubuntu.com/jammy/)
-- From [ROS2 Humble Hawksbill](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html). Your ROS2 environment must be [configured](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Configuring-ROS2-Environment.html), your workspace [created](https://docs.ros.org/en/humble/Tutorials/Beginner-Client-Libraries/Creating-A-Workspace/Creating-A-Workspace.html), and colcon, used to build the packages, [installed](https://docs.ros.org/en/humble/Tutorials/Beginner-Client-Libraries/Colcon-Tutorial.html).
-- [rosdep](https://docs.ros.org/en/humble/Tutorials/Intermediate/Rosdep.html). rosdep must be installed as a debian package (`sudo apt update && sudo apt install python3-rosdep2 && sudo rosdep init && rosdep update`).
-- From [pylon Camera Software Suite](https://www2.baslerweb.com/en/downloads/software-downloads/) version 7.2 or newer. The latest APi libraries must be installed manually. Download and install the latest pylon Camera Software Suite Linux Debian Installer Package for your architecture. You may be experiencing some problems with the codemeter debian package installation. Just drop it for now and install only the pylon debian package in this case.
-- From [pylon Supplementary Package for blaze](https://www2.baslerweb.com/en/downloads/software-downloads/) version 1.3 or newer (compatibility with the installed pylon Camera Software Suite needs to be ensured, please refer to the documentation). The latest APi libraries must be installed manually. Download and install the latest pylon Supplementary Package for blaze Linux Debian Installer Package for your architecture.
+- From [Ubuntu 24.04 Noble Numbat](https://releases.ubuntu.com/noble/)
+- From [ROS2 Jazzy Jalisco](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html). Your ROS2 environment must be [configured](https://docs.ros.org/en/jazzy/Tutorials/Beginner-CLI-Tools/Configuring-ROS2-Environment.html), your workspace [created](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Creating-A-Workspace/Creating-A-Workspace.html), and colcon, used to build the packages, [installed](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Colcon-Tutorial.html).
+- [rosdep](https://docs.ros.org/en/jazzy/Tutorials/Intermediate/Rosdep.html). rosdep must be installed as a debian package (`sudo apt update && sudo apt install python3-rosdep && sudo rosdep init && rosdep update`).
+- From [pylon Camera Software Suite](https://www2.baslerweb.com/en/downloads/software-downloads/) version 7.5.0 or newer. The latest APi libraries must be installed manually. Download and install the latest pylon Camera Software Suite Linux Debian Installer Package for your architecture. You may be experiencing some problems with the codemeter debian package installation. Just drop it for now and install only the pylon debian package in this case.
+- From [pylon Supplementary Package for blaze](https://www2.baslerweb.com/en/downloads/software-downloads/) version 1.6.0 or newer (compatibility with the installed pylon Camera Software Suite needs to be ensured, please refer to the documentation). The latest APi libraries must be installed manually. Download and install the latest pylon Supplementary Package for blaze Linux Debian Installer Package for your architecture.
 - [Git](https://git-scm.com/). Git must be installed as a debian package (`sudo apt update && sudo apt install git`).
 - [xterm](https://invisible-island.net/xterm/). The xterm terminal emulator must be installed (refer to the *Know Issues* section below) as a debian package (`sudo apt update && sudo apt install xterm`).
 
@@ -25,21 +25,21 @@ You are welcome to post any questions or issues on [GitHub](https://github.com/b
 
 This repository including the pylon ROS2 packages must be cloned in your workspace (e.g., `dev_ws` for instance):  
 ```
-cd ~/dev_ws/src && git clone -b humble https://github.com/basler/pylon-ros-camera pylon_ros2_camera
+cd ~/dev_ws/src && git clone -b jazzy_beta https://github.com/basler/pylon-ros-camera pylon_ros2_camera
 ```  
 
 Install the ROS2 dependencies required by the pylon ROS2 packages:  
 ``cd ~/dev_ws && rosdep install --from-paths src --ignore-src -r -y``  
 You may experience some problems with the `diagnostic_updater` and `pcl_ros` dependencies. In this case, install them by executing the following commands:  
 ```
-sudo apt install ros-humble-diagnostic-updater
-sudo apt install ros-humble-pcl-ros
+sudo apt install ros-jazzy-diagnostic-updater
+sudo apt install ros-jazzy-pcl-ros
 ```
 
 Compile the workspace using `colcon`:  
 ``cd ~/dev_ws && colcon build``  
 
-**Note**: The --symlink-install flag can be added to the `colcon build` command. This allows the installed files to be changed by changing the files in the source space (e.g., Python files or other not compiled resourced) for faster iteration (refer to [the ROS2 documentation](https://docs.ros.org/en/humble/Tutorials/Beginner-Client-Libraries/Colcon-Tutorial.html)).
+**Note**: The --symlink-install flag can be added to the `colcon build` command. This allows the installed files to be changed by changing the files in the source space (e.g., Python files or other not compiled resourced) for faster iteration (refer to [the ROS2 documentation](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Colcon-Tutorial.html)).
 
 **Note**: The packages are built in Release by default. The build type can be modfied by using the `--cmake-args` flag (for instance `colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Debug`).
 
@@ -69,7 +69,7 @@ The pylon node defines the different interface names according to the following 
 The camera and the node names can be set thanks respectively to the `camera_name` and `node_name` parameters.  
 
 Acquisition images are published through the `[Camera name]/[Node name]/[image_raw]` topic, only if a subscriber to this topic has been registered.  
-To visualize the images, [rqt](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Introducing-Turtlesim/Introducing-Turtlesim.html#install-rqt) can be used. Add an image viewer plugin through thanks to the contextual menu (Plugin -> Visualization -> Image View) and select the `[Camera name]/[Node name]/[image_raw]` topic to display the acquired and published images.  
+To visualize the images, [rqt](https://docs.ros.org/en/jazzy/Tutorials/Beginner-CLI-Tools/Introducing-Turtlesim/Introducing-Turtlesim.html#install-rqt) can be used. Add an image viewer plugin through thanks to the contextual menu (Plugin -> Visualization -> Image View) and select the `[Camera name]/[Node name]/[image_raw]` topic to display the acquired and published images.  
 The 3d point clouds acquired by the blaze can be visualized thanks to [rviz2](https://index.ros.org/p/rviz2/).  
 
 For camera models other than the blaze, specific user set can be specified thanks to the `startup_user_set` parameter.  
@@ -95,6 +95,8 @@ The pylon ROS2 driver support currently the following ROS2 image pixel formats :
 	* bayer_bggr16 	(Basler Format : BayerBG16, BayerBG12)  (Notes 1&2)
 	* bayer_gbrg16 	(Basler Format : BayerGB16, BayerGB12)  (Notes 1&2)
 	* bayer_grbg16 	(Basler Format : BayerGR16, BayerGR12)  (Notes 1&2)
+
+More information about the image encoding can be found in the [Basler documentation](https://docs.baslerweb.com/pixel-format).
 
 **NOTES:**
 
@@ -129,7 +131,7 @@ USB cameras must be disconnected and then reconnected after setting a new device
 
 - **camera_frame**  
   The tf2 frame under which the images were published.  
-  ROS2 provides a library called [tf2](https://docs.ros.org/en/humble/Concepts/About-Tf2.html) (*TransForm* version 2) to manage the coordinate transformations between the different frames (coordinate systems) defined by the user and assigned to the components of a robotics system.
+  ROS2 provides a library called [tf2](https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Tf2.html) (*TransForm* version 2) to manage the coordinate transformations between the different frames (coordinate systems) defined by the user and assigned to the components of a robotics system.
 
 - **device_user_id**  
   The DeviceUserID of the camera. If empty, the first camera found in the device list will be used.
@@ -181,13 +183,13 @@ The following settings do **NOT** have to be set. Each camera has default values
   Gamma correction of pixel intensity. Adjusts the brightness of the pixel values output by the camera's sensor to account for a non-linearity in the human perception of brightness or of the display system (such as CRT).
 
 - **brightness (not for the blaze)**  
-  The average intensity value of the images. It depends the exposure time as well as the gain setting. If '**exposure**' is provided, the interface will try to reach the desired brightness by only varying the gain. (What may often fail, because the range of possible exposure values is many times higher than the gain range). If '**gain**' is provided, the interface will try to reach the desired brightness by only varying the exposure time. If '**gain**' AND '**exposure**' are given, it is not possible to reach the brightness, because both are assumed to be fix.
+  The average intensity value of the images. It depends on the exposure time as well as the gain setting. If '**exposure**' is provided, the interface will try to reach the desired brightness by only varying the gain. (What may often fail, because the range of possible exposure values is many times higher than the gain range). If '**gain**' is provided, the interface will try to reach the desired brightness by only varying the exposure time. If '**gain**' AND '**exposure**' are given, it is not possible to reach the brightness, because both are assumed to be fixed.
 
 - **brightness_continuous (not for the blaze)**  
-  Only relevant, if '**brightness**' is set: The brightness_continuous flag controls the auto brightness function. If it is set to false, the brightness will only be reached once. Hence changing light conditions lead to changing brightness values. If it is set to true, the given brightness will be reached continuously, trying to adapt to changing light conditions. This is only possible for values in the possible auto range of the pylon API which is e.g., [50 - 205] for acA2500-14um and acA1920-40gm.
+  Only relevant, if '**brightness**' is set. The brightness_continuous flag controls the auto brightness function. If it is set to false, the brightness will only be reached once. Hence changing light conditions lead to changing brightness values. If it is set to true, the given brightness will be reached continuously, trying to adapt to changing light conditions. This is only possible for values in the possible auto range of the pylon API which is generally [50 - 205].
 
 - **exposure_auto & gain_auto (not for the blaze)**  
-  Only relevant, if '**brightness**' is set: If the camera should try to reach and / or keep the brightness, hence adapting to changing light conditions, at least one of the following flags must be set. If both are set, the interface will use the profile that tries to keep the gain at minimum to reduce white noise. The exposure_auto flag indicates, that the desired brightness will be reached by adapting the exposure time. The gain_auto flag indicates, that the desired brightness will be reached by adapting the gain.
+  Only relevant, if '**brightness**' is set. If the camera should try to reach and / or keep the brightness, hence adapting to changing light conditions, at least one of the following flags must be set. If both are set, the interface will use the profile that tries to keep the gain at minimum to reduce white noise. The '**exposure_auto**' flag indicates, that the desired brightness will be reached by adapting the exposure time. The '**gain_auto**' flag indicates, that the desired brightness will be reached by adapting the gain.
 
 **Optional and device specific parameter**
 
@@ -475,8 +477,8 @@ If you hot-swap the camera with a different camera with a non-compatible pixel e
 
 ### Slow frame rate
 
-If the camera image acquistion is triggered by sofware trigger (default setting), then it is not possible to get the maximum frame rate, because the image acquisition is sequentially triggered, which is not overlapping then.
-Several possible solutions are mentionned and tested in issue [#21](https://github.com/basler/pylon-ros-camera/issues/21), [#28](https://github.com/basler/pylon-ros-camera/issues/28), [#29](https://github.com/basler/pylon-ros-camera/issues/29), [#81](https://github.com/basler/pylon-ros-camera/issues/81), [#116](https://github.com/basler/pylon-ros-camera/issues/116), [#147](https://github.com/basler/pylon-ros-camera/issues/147), and [#200](https://github.com/basler/pylon-ros-camera/issues/200). Please refer to them for more information.
+If the camera image acquistion is triggered by sofware trigger (default setting), then it is not possible to get the maximum frame rate, because the image acquisition is sequentially triggered, which is not overlapping then. The maximum possible framerate should displayed in the terminal when starting the driver.
+Please refer to the [Basler](https://docs.baslerweb.com/resulting-acquisition-frame-rate) documentation to adjust your parameters to increase your framerate. Additionally, several possible solutions are mentionned and tested in issue [#21](https://github.com/basler/pylon-ros-camera/issues/21), [#28](https://github.com/basler/pylon-ros-camera/issues/28), [#29](https://github.com/basler/pylon-ros-camera/issues/29), [#81](https://github.com/basler/pylon-ros-camera/issues/81), [#116](https://github.com/basler/pylon-ros-camera/issues/116), [#147](https://github.com/basler/pylon-ros-camera/issues/147), and [#200](https://github.com/basler/pylon-ros-camera/issues/200). Please refer to them for more information.
 
 ### GigE Devices
 

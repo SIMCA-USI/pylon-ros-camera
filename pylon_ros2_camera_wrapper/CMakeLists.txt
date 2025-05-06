@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.27)
 
 project(pylon_ros2_camera_wrapper)
 
@@ -41,6 +41,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(pylon_ros2_camera_component REQUIRED)
 find_package(cv_bridge REQUIRED)
+find_package(image_geometry REQUIRED)
 
 set(CAMERA_WRAPPER_DEPENDENCIES
 	rclcpp
@@ -48,7 +49,17 @@ set(CAMERA_WRAPPER_DEPENDENCIES
 	rcutils
 	pylon_ros2_camera_component
 	cv_bridge
+	image_geometry
 )
+
+# we need to add these two checks to use the correct headers
+if(cv_bridge_VERSION VERSION_GREATER_EQUAL 3.3.0)
+    add_compile_definitions(cv_bridge_HPP)
+endif()
+
+if(image_geometry_VERSION VERSION_GREATER_EQUAL 3.3.0)
+    add_compile_definitions(image_geometry_HPP)
+endif()
 
 add_executable(${PROJECT_NAME}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.cpp

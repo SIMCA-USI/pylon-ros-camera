@@ -144,7 +144,7 @@ bool PylonROS2GigEAce2Camera::applyCamSpecificStartupSettings(const PylonROS2Cam
             {
                 RCLCPP_WARN_STREAM(LOGGER_GIGE_ACE2, "Problem when trying to set the camera AutoExposure thresholds: Problem with variable ID.");
             }
-
+            
             // The gain auto function and the exposure auto function can be used at the
             // same time. In this case, however, you must also set the
             // Auto Function Profile feature.
@@ -184,7 +184,7 @@ bool PylonROS2GigEAce2Camera::applyCamSpecificStartupSettings(const PylonROS2Cam
             {
                 RCLCPP_WARN_STREAM(LOGGER_GIGE_ACE2, "Problem when trying to display the camera exposure values: Problem with variable ID.");
             }
-            
+
             RCLCPP_INFO_STREAM(LOGGER_GIGE_ACE2, "Cam has gain range: ["
                     << cam_->Gain.GetMin() << " - "
                     << cam_->Gain.GetMax()
@@ -301,7 +301,7 @@ bool PylonROS2GigEAce2Camera::applyCamSpecificStartupSettings(const PylonROS2Cam
             {
                 RCLCPP_WARN_STREAM(LOGGER_GIGE_ACE2, "Problem when trying to set the camera AutoExposure thresholds: Problem with variable ID.");
             }
-                    
+
             cam_->GevSCPSPacketSize.SetValue(parameters.mtu_size_);
             cam_->GevSCPD.SetValue(parameters.inter_pkg_delay_);
             cam_->GevSCFTD.SetValue(parameters.frame_transmission_delay_);

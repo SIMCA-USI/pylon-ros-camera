@@ -55,6 +55,11 @@ bool BinaryExposureSearch::update(const float& current_brightness,
     {
         // no need to update the limits, the first time this function will
         // be called because limits were correctly set in the constructor
+
+        // MODIFICADO INICIO
+        left_limit_ = 0.0f;  // Límite inferior (puedes cambiar este valor)
+        right_limit_ = 20000.0f;  // Límite superior (puedes cambiar este valor)
+        // MODIFICADO FIN
         is_initial_setting_ = false;
         return true;
     }

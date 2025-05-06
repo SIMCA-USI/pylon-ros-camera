@@ -75,9 +75,17 @@
 #include "pylon_ros2_camera_parameter.hpp"
 
 #include <camera_info_manager/camera_info_manager.hpp>
-#include <image_geometry/pinhole_camera_model.h>
+#ifdef image_geometry_HPP
+  #include <image_geometry/pinhole_camera_model.hpp>
+#else
+  #include <image_geometry/pinhole_camera_model.h>
+#endif
 
-#include <cv_bridge/cv_bridge.h>
+#ifdef cv_bridge_HPP
+  #include <cv_bridge/cv_bridge.hpp>
+#else
+  #include <cv_bridge/cv_bridge.h>
+#endif
 
 #include <image_transport/image_transport.hpp>
 #include <image_transport/camera_publisher.hpp>
@@ -223,7 +231,8 @@ protected:
    *                      reached adapting the gain.
    * @return true if the brightness could be reached or false otherwise.
    */
-  bool setBrightness(const int& target_brightness,
+  
+  bool setBrightness(const int& target_brightness, //MODIFICADO (int x float)
                      int& reached_brightness,
                      const bool& exposure_auto,
                      const bool& gain_auto);

@@ -237,7 +237,7 @@ bool PylonROS2USBCamera::applyCamSpecificStartupSettings(const PylonROS2CameraPa
             {
                 RCLCPP_WARN_STREAM(LOGGER_USB, "Problem when trying to set the camera AutoExposure thresholds: Problem with variable ID.");
             }
-                    
+
             RCLCPP_INFO(LOGGER_USB, "CurrentSetting loaded");
         }
         else
